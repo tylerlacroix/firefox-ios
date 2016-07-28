@@ -678,8 +678,11 @@ extension TabTrayController {
 }
 
 extension TabTrayController: TabSelectionDelegate {
-    func didSelectTabAtIndex(index: Int) {
+    func didSelectTabAtIndex(index: Int, delayLoad: Bool = false) {
         let tab = tabsToDisplay[index]
+        if delayLoad {
+            tab.delayLoad = true
+        }
         tabManager.selectTab(tab)
         self.navigationController?.popViewControllerAnimated(true)
     }
@@ -921,7 +924,7 @@ private class TabManagerDataSource: NSObject, UICollectionViewDataSource {
 }
 
 @objc protocol TabSelectionDelegate: class {
-    func didSelectTabAtIndex(index: Int)
+    func didSelectTabAtIndex(index: Int, delayLoad: Bool)
 }
 
 private class TabLayoutDelegate: NSObject, UICollectionViewDelegateFlowLayout {
@@ -977,7 +980,7 @@ private class TabLayoutDelegate: NSObject, UICollectionViewDelegateFlowLayout {
     }
 
     @objc func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
-        tabSelectionDelegate?.didSelectTabAtIndex(indexPath.row)
+        tabSelectionDelegate?.didSelectTabAtIndex(indexPath.row, delayLoad: false)
     }
 }
 
