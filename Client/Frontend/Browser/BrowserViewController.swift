@@ -2327,7 +2327,6 @@ extension BrowserViewController: WKNavigationDelegate {
 
     func webView(webView: WKWebView, didCommitNavigation navigation: WKNavigation!) {
         guard let tab = tabManager[webView] else { return }
-return
 //return // Uncomment to fix
         tab.url = webView.URL
 

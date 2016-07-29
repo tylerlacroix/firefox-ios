@@ -43,6 +43,10 @@ class TopTabsViewController: UIViewController {
     let tabManager: TabManager
     weak var delegate: TopTabsDelegate?
     var isPrivate = false
+    
+    var draggedTab: TopTabCell?
+    var draggedIndexPath: NSIndexPath?
+    
     lazy var collectionView: UICollectionView = {
         let collectionView = UICollectionView(frame: CGRectZero, collectionViewLayout: TopTabsViewLayout())
         collectionView.registerClass(TopTabCell.self, forCellWithReuseIdentifier: TopTabCell.Identifier)
@@ -200,7 +204,9 @@ class TopTabsViewController: UIViewController {
     }
     
     func reloadFavicons() {
-        self.collectionView.reloadData()
+        if draggedTab == nil {
+            self.collectionView.reloadData()
+        }
     }
     
     func scrollToCurrentTab(animated: Bool = true, centerCell: Bool = false) {
@@ -218,9 +224,6 @@ class TopTabsViewController: UIViewController {
             }
         }
     }
-    
-    var draggedTab: TopTabCell?
-    var draggedIndexPath: NSIndexPath?
     
     @available(iOS 9, *)
     func tabLongPressed(gestureRecogniser: UIGestureRecognizer) {
@@ -249,11 +252,16 @@ class TopTabsViewController: UIViewController {
                 location.y = self.collectionView.frame.height / 2
                 collectionView.updateInteractiveMovementTargetPosition(location)
             case .Ended, .Cancelled, .Failed:
-                if gestureRecogniser.state == .Ended {
-                    collectionView.endInteractiveMovement()
-                } else {
-                    collectionView.cancelInteractiveMovement()
-                }
+                collectionView.performBatchUpdates({
+                    if gestureRecogniser.state == .Ended {
+                        self.collectionView.endInteractiveMovement()
+                    } else {
+                        self.collectionView.cancelInteractiveMovement()
+                    }
+                    }, completion: { done in
+                        if done {
+                            self.collectionView.reloadData()
+                        }})
                 if let draggedTab = self.draggedTab {
                     draggedTab.isBeingDragged = false
                     self.draggedTab = nil
@@ -389,11 +397,15 @@ extension TopTabsViewController: TabSelectionDelegate {
 
 extension TopTabsViewController: WKNavigationDelegate {
     func webView(webView: WKWebView, didFinishNavigation navigation: WKNavigation!) {
-        collectionView.reloadData()
+        if draggedTab == nil {
+            collectionView.reloadData()
+        }
     }
     
     func webView(webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
-        collectionView.reloadData()
+        if draggedTab == nil {
+            collectionView.reloadData()
+        }
     }
 }
 
